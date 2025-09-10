@@ -48,7 +48,7 @@
 
         if (res.ok && data.status === "success") {
           result.className = "result success";
-          result.innerHTML = `✅ VPS đã sẵn sàng: <a href="${data.remote_link}" target="_blank">${data.remote_link}</a>`;
+          result.innerHTML = `✅ VPS đã sẵn sàng: <a href="${data.url}" target="_blank">${data.remote_link}</a>`;
         } else {
           result.className = "result error";
           result.innerText = "❌ Error: " + (data.error || "Unknown error");
