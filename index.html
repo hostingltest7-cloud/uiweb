@@ -1,130 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>GitHub VPS UI</title>
-<style>
-    body {
-        background-color: #0d0d0d;
-        color: #00ff99;
-        font-family: 'Courier New', monospace;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        min-height: 100vh;
-        margin: 0;
-        padding: 40px;
-    }
-
-    h1 {
-        color: #00ffcc;
-        text-shadow: 0 0 10px #00ffcc;
-        margin-bottom: 20px;
-    }
-
-    input {
-        background: #111;
-        border: 2px solid #00ffcc;
-        color: #00ffcc;
-        padding: 10px;
-        width: 320px;
-        font-size: 16px;
-        outline: none;
-        border-radius: 6px;
-    }
-
-    input:focus {
-        border-color: #00ffaa;
-        box-shadow: 0 0 10px #00ffaa;
-    }
-
-    button {
-        background: #00ff99;
-        border: none;
-        color: #111;
-        padding: 10px 20px;
-        margin-top: 15px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 16px;
-        border-radius: 6px;
-        transition: all 0.2s ease-in-out;
-    }
-
-    button:hover {
-        background: #00ffaa;
-        transform: scale(1.05);
-        box-shadow: 0 0 15px #00ffaa;
-    }
-
-    #status {
-        background: #111;
-        border: 2px solid #00ff99;
-        padding: 15px;
-        margin-top: 30px;
-        width: 90%;
-        max-width: 800px;
-        height: 400px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        border-radius: 8px;
-        box-shadow: inset 0 0 20px #00ff99;
-    }
-
-    /* Terminal effect */
-    #status::before {
-        content: "root@vps:~$ ";
-        color: #00ffaa;
-        font-weight: bold;
-    }
-
-    .log-line {
-        display: block;
-        margin: 2px 0;
-    }
-
-    .success { color: #00ffcc; }
-    .error { color: #ff5555; }
-    .warn { color: #ffaa00; }
-    .info { color: #00ff99; }
-</style>
+  <meta charset="UTF-8">
+  <title>VPS Creator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; max-width: 500px; margin: auto; }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .result { margin-top: 20px; font-weight: bold; }
+    .success { color: green; }
+    .error { color: red; }
+    .loading { color: orange; }
+  </style>
 </head>
 <body>
-    <h1>⚡ GitHub VPS Manager</h1>
-    <input type="text" id="token" placeholder="🔑 Enter GitHub Token">
-    <br>
-    <button onclick="createRepo()">🚀 Create VPS</button>
-    <div id="status"></div>
+  <h1>🚀 VPS Creator</h1>
+  <p>Nhập GitHub Token để khởi tạo VPS</p>
 
-<script>
-async function createRepo() {
-    const token = document.getElementById('token').value.trim();
-    if (!token) {
-        alert("Please enter GitHub token");
+  <input type="password" id="token" placeholder="Nhập GitHub Token...">
+  <button id="btnCreate" onclick="createVPS()">Create VPS</button>
+
+  <div id="result" class="result"></div>
+
+  <script>
+    async function createVPS() {
+      const token = document.getElementById('token').value.trim();
+      const btn = document.getElementById('btnCreate');
+      const result = document.getElementById('result');
+
+      if (!token) {
+        alert("Vui lòng nhập GitHub Token!");
         return;
+      }
+
+      btn.disabled = true;
+      result.className = "result loading";
+      result.innerText = "⏳ Creating VPS...";
+
+      try {
+        const res = await fetch("https://api-1-c8cj.onrender.com/api", { // 🔹 API backend của bạn
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ github_token: token })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.status === "success") {
+          result.className = "result success";
+          result.innerHTML = `✅ VPS đã sẵn sàng: <a href="${data.remote_link}" target="_blank">${data.remote_link}</a>`;
+        } else {
+          result.className = "result error";
+          result.innerText = "❌ Error: " + (data.error || "Unknown error");
+        }
+      } catch (err) {
+        result.className = "result error";
+        result.innerText = "⚠️ Lỗi kết nối: " + err.message;
+      } finally {
+        btn.disabled = false;
+      }
     }
-
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = "";
-    
-    const response = await fetch("https://api-1-c8cj.onrender.com/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ github_token: token })
-    });
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        statusDiv.textContent += chunk.replace(/data: /g, "");
-        statusDiv.scrollTop = statusDiv.scrollHeight; // auto scroll
-    }
-}
-</script>
+  </script>
 </body>
 </html>
