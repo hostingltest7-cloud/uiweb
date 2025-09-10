@@ -48,10 +48,10 @@
 
         if (res.ok && data.status === "success") {
           result.className = "result success";
-          result.innerHTML = `✅ VPS đã sẵn sàng: <a href="${data.url}" target="_blank">${data.remote_link}</a>`;
+          result.innerHTML = `✅ VPS đã sẵn sàng: <a href="${data.url}" target="_blank">${data.url}</a>`;
         } else {
           result.className = "result error";
-          result.innerText = "❌ Error: " + (data.error || "Unknown error");
+          result.innerText = "❌ Error: " + (data.error || data.message || "Unknown error");
         }
       } catch (err) {
         result.className = "result error";
